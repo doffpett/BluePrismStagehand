@@ -22,9 +22,8 @@ app.post('/init', async (req, res) => {
       env: 'LOCAL',
       enableCaching: false,
       headless: false,
-      model: {
-        name: 'gpt-4o',
-        provider: 'openai',
+      modelName: 'gpt-4o',
+      modelClientOptions: {
         apiKey: process.env.OPENAI_API_KEY
       }
     });
