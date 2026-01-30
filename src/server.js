@@ -1,9 +1,35 @@
 require('dotenv').config();
 const express = require('express');
 const { Stagehand } = require('@browserbasehq/stagehand');
+const { z } = require('zod');
 
 const app = express();
 app.use(express.json());
+
+// Helper: Convert JSON schema definition to Zod schema
+function jsonToZod(schema) {
+  if (!schema || !schema.properties) return null;
+
+  const zodShape = {};
+  for (const [key, value] of Object.entries(schema.properties)) {
+    if (value.type === 'string') {
+      zodShape[key] = z.string().describe(value.description || key);
+    } else if (value.type === 'number') {
+      zodShape[key] = z.number().describe(value.description || key);
+    } else if (value.type === 'boolean') {
+      zodShape[key] = z.boolean().describe(value.description || key);
+    } else if (value.type === 'array') {
+      if (value.items?.type === 'string') {
+        zodShape[key] = z.array(z.string()).describe(value.description || key);
+      } else if (value.items?.type === 'object') {
+        zodShape[key] = z.array(jsonToZod(value.items) || z.any()).describe(value.description || key);
+      } else {
+        zodShape[key] = z.array(z.any()).describe(value.description || key);
+      }
+    }
+  }
+  return z.object(zodShape);
+}
 
 // Store active Stagehand instance
 let stagehand = null;
@@ -74,14 +100,27 @@ app.post('/act', async (req, res) => {
 // Extract - extract data from the page using natural language
 app.post('/extract', async (req, res) => {
   try {
-    const { instruction } = req.body;
+    const { instruction, schema } = req.body;
     if (!stagehand) {
       return res.status(400).json({ success: false, error: 'Not initialized. Call /init first' });
     }
 
     console.log('Extract called with instruction:', instruction);
-    // v3 extract takes instruction string directly
-    const result = await stagehand.extract(instruction);
+    console.log('Schema provided:', schema ? 'YES' : 'NO');
+
+    let result;
+    if (schema) {
+      // Convert JSON schema to Zod and use structured extraction
+      const zodSchema = jsonToZod(schema);
+      result = await stagehand.extract({
+        instruction,
+        schema: zodSchema
+      });
+    } else {
+      // Simple extraction without schema
+      result = await stagehand.extract(instruction);
+    }
+
     res.json({ success: true, result });
   } catch (error) {
     console.log('Extract error:', error.message);
