@@ -16,12 +16,15 @@ app.post('/init', async (req, res) => {
       await stagehand.close();
     }
 
+    console.log('Initializing Stagehand with OpenAI API key:', process.env.OPENAI_API_KEY ? 'SET' : 'NOT SET');
+
     stagehand = new Stagehand({
       env: 'LOCAL',
       enableCaching: false,
-      headless: false, // Vis browser for demo
-      modelName: 'openai/gpt-4o',
-      modelClientOptions: {
+      headless: false,
+      model: {
+        name: 'gpt-4o',
+        provider: 'openai',
         apiKey: process.env.OPENAI_API_KEY
       }
     });
@@ -29,6 +32,7 @@ app.post('/init', async (req, res) => {
     await stagehand.init();
     page = stagehand.page;
 
+    console.log('Stagehand initialized successfully');
     res.json({ success: true, message: 'Stagehand initialized' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
