@@ -146,6 +146,36 @@ app.post('/observe', async (req, res) => {
   }
 });
 
+// Agent - execute autonomous multi-step tasks
+app.post('/agent', async (req, res) => {
+  try {
+    const { task, maxSteps } = req.body;
+    if (!stagehand) {
+      return res.status(400).json({ success: false, error: 'Not initialized. Call /init first' });
+    }
+
+    console.log('Agent called with task:', task);
+    console.log('Max steps:', maxSteps || 'default');
+
+    // Create agent and execute task
+    const agent = stagehand.agent({
+      modelName: 'gpt-4o',
+      modelClientOptions: {
+        apiKey: process.env.OPENAI_API_KEY
+      }
+    });
+
+    const result = await agent.execute(task, {
+      maxSteps: maxSteps || 10
+    });
+
+    res.json({ success: true, result });
+  } catch (error) {
+    console.log('Agent error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Close browser
 app.post('/close', async (req, res) => {
   try {
@@ -178,6 +208,7 @@ app.listen(PORT, () => {
   console.log('  POST /act      - Perform action { action: "..." }');
   console.log('  POST /extract  - Extract data { instruction: "...", schema?: {...} }');
   console.log('  POST /observe  - Observe page { instruction: "..." }');
+  console.log('  POST /agent    - Autonomous multi-step task { task: "...", maxSteps?: 10 }');
   console.log('  POST /close    - Close browser');
   console.log('  GET  /health   - Health check');
 });
