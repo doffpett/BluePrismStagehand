@@ -20,9 +20,9 @@ app.post('/init', async (req, res) => {
       env: 'LOCAL',
       enableCaching: false,
       headless: false, // Vis browser for demo
-      modelName: 'claude-sonnet-4-20250514',
+      modelName: 'gpt-4o',
       modelClientOptions: {
-        apiKey: process.env.ANTHROPIC_API_KEY
+        apiKey: process.env.OPENAI_API_KEY
       }
     });
 
