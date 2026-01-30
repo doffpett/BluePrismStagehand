@@ -29,7 +29,8 @@ app.post('/init', async (req, res) => {
     });
 
     await stagehand.init();
-    page = stagehand.page;
+    // In v3, get page from context
+    page = stagehand.context.pages()[0];
 
     console.log('Stagehand initialized successfully');
     console.log('Page object:', page ? 'SET' : 'NOT SET');
@@ -43,11 +44,11 @@ app.post('/init', async (req, res) => {
 app.post('/goto', async (req, res) => {
   try {
     const { url } = req.body;
-    if (!stagehand || !stagehand.page) {
+    if (!page) {
       return res.status(400).json({ success: false, error: 'Not initialized. Call /init first' });
     }
 
-    await stagehand.page.goto(url);
+    await page.goto(url);
     res.json({ success: true, message: `Navigated to ${url}` });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
