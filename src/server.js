@@ -74,17 +74,17 @@ app.post('/act', async (req, res) => {
 // Extract - extract data from the page using natural language
 app.post('/extract', async (req, res) => {
   try {
-    const { instruction, schema } = req.body;
+    const { instruction } = req.body;
     if (!stagehand) {
       return res.status(400).json({ success: false, error: 'Not initialized. Call /init first' });
     }
 
-    const result = await stagehand.extract({
-      instruction,
-      schema: schema || undefined
-    });
+    console.log('Extract called with instruction:', instruction);
+    // v3 extract takes instruction string directly
+    const result = await stagehand.extract(instruction);
     res.json({ success: true, result });
   } catch (error) {
+    console.log('Extract error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -97,9 +97,12 @@ app.post('/observe', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Not initialized. Call /init first' });
     }
 
-    const result = await stagehand.observe({ instruction });
+    console.log('Observe called with instruction:', instruction);
+    // v3 observe takes instruction string directly
+    const result = await stagehand.observe(instruction);
     res.json({ success: true, result });
   } catch (error) {
+    console.log('Observe error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
