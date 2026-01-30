@@ -56,12 +56,13 @@ app.post('/goto', async (req, res) => {
 // Act - perform an action described in natural language
 app.post('/act', async (req, res) => {
   try {
-    const { action } = req.body;
+    const { action, instruction } = req.body;
     if (!stagehand) {
       return res.status(400).json({ success: false, error: 'Not initialized. Call /init first' });
     }
 
-    const result = await stagehand.act({ action });
+    // v3 uses 'instruction', but we support both for convenience
+    const result = await stagehand.act(instruction || action);
     res.json({ success: true, result });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
